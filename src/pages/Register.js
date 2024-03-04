@@ -1,4 +1,4 @@
-import {Row, Col, Form, Button} from 'react-bootstrap';
+import {Row, Col, Form, Button, Spinner} from 'react-bootstrap';
 import {useState, useEffect} from 'react';
 import {useNavigate} from 'react-router-dom';
 import { Link } from 'react-router-dom';
@@ -13,12 +13,14 @@ export default function Register () {
     const [match, setMatch] = useState(false);
     const [isError, setIsError] = useState(false);
     const [message, setMessage] = useState('');
+    const [isRegisterLoading, setIsRegisterLoading] = useState(false);
 
     const navigate = useNavigate();
 
-    function registerUser (e){
+    async function registerUser (e){
+        setIsRegisterLoading(true);
         e.preventDefault();
-        fetch(`${process.env.REACT_APP_API_URL}/user/register`, {
+        await fetch(`${process.env.REACT_APP_API_URL}/user/register`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
@@ -30,17 +32,22 @@ export default function Register () {
         })
         .then(result => result.json())
         .then(data => {
+            
             if(data === "Successful registration"){
+                
                 setMessage(data);
                 setIsError(false);
                 navigate('/login');
             }
             else{
+                setIsRegisterLoading(false);
                 setMessage(data);
                 setIsError(true);
             }
             
+            
         })
+        setIsRegisterLoading(false)
       
     }
 
@@ -111,7 +118,13 @@ export default function Register () {
                     </Form.Group>
                     <Form.Group className='d-flex m-3 justify-content-center'>
                         {match?
+                            <>
+                            {isRegisterLoading?
+                            <Spinner animation="border" size="sm"/>
+                            :
                             <Button variant="dark" type="submit">Register</Button>
+                            }
+                            </>
                             :
                             <Button variant='dark' type="submit" disabled>Register</Button>
                         }

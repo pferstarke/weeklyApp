@@ -1,27 +1,28 @@
 import { useState, useEffect, useContext } from 'react';
-import { Form, Button, Row, Col } from 'react-bootstrap';
+import { Form, Button, Row, Col, Spinner } from 'react-bootstrap';
 import {useNavigate} from 'react-router-dom';
 import UserContext from '../UserContext';
 import { Link } from 'react-router-dom';
 
 export default function Login () {
 
-    // const [ user, setUser ] = useState({
-    //     id: localStorage.getItem('id'),
-    //     isAdmin: localStorage.getItem('isAdmin')
-    // })
-
     const { user, setUser } = useContext(UserContext);
     const [userName, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [isEmpty, setIsEmpty] = useState(true);
     const [message, setMessage] = useState('');
+    const [isError, setIsError] = useState(false);
+    const [isLoginLoading, setIsLoginLoading] = useState(false);
 
     const navigate = useNavigate();
 
-    function authenticate(event){
+    async function authenticate(event){
+
+        setIsLoginLoading(true);
+
         event.preventDefault();
-        fetch(`${process.env.REACT_APP_API_URL}/user/login`, {
+
+        await fetch(`${process.env.REACT_APP_API_URL}/user/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -34,16 +35,20 @@ export default function Login () {
         .then(result => result.json())
         .then(data => {
             if(typeof data.access !== 'undefined'){
+
                 localStorage.setItem('token', data.access)
-                
                 getUserDetails(data.access);
                 setMessage('Login Successful. Please wait a moment.')
+                setIsError(false);
                 navigate('/')
+
             }
             else{
+                setIsError(true);
                 setMessage(data);
             }
         })
+        setIsLoginLoading(false);
         
         
     }
@@ -100,13 +105,25 @@ export default function Login () {
                     {isEmpty?
                         <Button variant="dark" disabled>Login</Button>
                         :
+                        <>
+                        {isLoginLoading?
+                        <Spinner animation="border" size="sm"/>
+                        :
                         <Button variant="dark"  type="submit">Login</Button>
+                        }
+                        </>
                     }
                     
                 </Form.Group>
-                <div className='d-flex text-warning justify-content-center'>
+                {isError?
+                <div className='d-flex text-danger justify-content-center'>
                     {message}
                 </div>
+                :
+                <div className='d-flex text-success justify-content-center'>
+                    {message}
+                </div>
+                }
             </Form>
             <Row className='text-light text-center'>
                 <Col xm={1}>
